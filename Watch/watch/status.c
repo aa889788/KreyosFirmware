@@ -91,19 +91,9 @@ uint16_t check_idle_time()
 
 void adjustAMPM(uint8_t hour, uint8_t *outhour, uint8_t *ispm);
 
-static void OnDraw(tContext* pContext)
-{
-  // clear the region
-  GrContextForegroundSet(pContext, ClrBlack);
-  GrRectFill(pContext, &status_clip);
-
-  GrContextForegroundSet(pContext, ClrWhite);
-  GrLineDrawH(pContext, 0, LCD_WIDTH, 16);
-
+static void DrawBattery(tContext* pContext){
   GrContextFontSet(pContext, (tFont*)&g_sFontExIcon16);
   char icon;
-  int x = CHARGE_X;
-
   switch(status & 0x03)
   {
     case BATTERY_EMPTY:
@@ -124,14 +114,30 @@ static void OnDraw(tContext* pContext)
 
   if (status & BATTERY_CHARGING)
   {
-    GrStringDraw(pContext, &icon, 1, 120, 0, 0);
+    GrStringDraw(pContext, &icon, 1, 116, 0, 0);
     icon = ICON_CHARGING;
-    GrStringDraw(pContext, &icon, 1, 137, 0, 0);
+    GrStringDraw(pContext, &icon, 1, 133, 0, 0);
   }
   else
   {
-    GrStringDraw(pContext, &icon, 1, 127, 0, 0);
+    GrStringDraw(pContext, &icon, 1, 123, 0, 0);
   }
+}
+
+static void OnDraw(tContext* pContext)
+{
+  // clear the region
+  GrContextForegroundSet(pContext, ClrBlack);
+  GrRectFill(pContext, &status_clip);
+
+  GrContextForegroundSet(pContext, ClrWhite);
+  GrLineDrawH(pContext, 0, LCD_WIDTH, 16);
+
+  GrContextFontSet(pContext, (tFont*)&g_sFontExIcon16);
+  char icon;
+  int x = CHARGE_X;
+
+  DrawBattery(pContext);
 
   x = 2;
   if (status & ALARM_STATUS)
@@ -177,10 +183,17 @@ static void OnDraw(tContext* pContext)
 
     adjustAMPM(hour, &hour, &ispm);
 
-    sprintf(buf, "%02d:%02d %s", hour, minute, ispm?"PM":"AM");
-    GrContextFontSet(pContext, &g_sFontGothic14);
-    GrStringDrawCentered(pContext, buf, -1, LCD_WIDTH/2, 8, 0);
+    if(window_readconfig()->language == 0) {
+      sprintf(buf, "%02d:%02d %s", hour, minute, ispm?"PM":"AM");
+      GrContextFontSet(pContext, &g_sFontGothic14);
+    }
+    else {
+      sprintf(buf, "%s%02d:%02d", ispm?"下午":"上午", hour, minute);
+      GrContextFontSet(pContext, (const tFont*)&g_sFontUnicode);
+    }
+    GrStringDrawCentered(pContext, buf, -1, LCD_WIDTH/2, 5, 0);
   }
+  DrawBattery(pContext);
 }
 
 /*
@@ -220,6 +233,7 @@ static void check_battery()
     }
   }
 
+#if 0
 #ifndef UNITTEST
   if (window_current() == &menu_process ||
     window_current() == &analogclock_process ||
@@ -230,6 +244,7 @@ static void check_battery()
       window_open(&charging_process, 0); 
     }
   }
+#endif
 #endif
 
   if (state == BATTERY_STATE_CHARGING)
@@ -256,7 +271,6 @@ static void on_midnigth(uint8_t event, uint16_t lparam, void* rparam)
   create_data_file(year - 2000, month, day);
 
   cleanUpSportsWatchData();
-
 }
 
 static void record_activity_data(uint8_t hour, uint8_t minute)
@@ -356,6 +370,9 @@ uint8_t status_process(uint8_t event, uint16_t lparam, void* rparam)
       status &= ~BLUETOOTH_STATUS;
     break;
   case EVENT_ANT_STATUS:
+    break;
+  case STATUS_PAINT_BATTERY:
+    DrawBattery((tContext*)rparam);
     break;
   default:
     return 0;

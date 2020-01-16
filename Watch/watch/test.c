@@ -686,7 +686,6 @@ uint8_t test_cleardata(uint8_t ev, uint16_t lparam, void* rparam)
 
 uint8_t test_builddata(uint8_t ev, uint16_t lparam, void* rparam)
 {
-
     printf("test_builddata()\n");
     uint8_t meta[] = {DATA_COL_STEP, DATA_COL_DIST, DATA_COL_HR};
     uint32_t data[] = {1234, 5678, 9012};

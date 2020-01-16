@@ -550,7 +550,7 @@ CFSFontWrapperLoad()
             //
             // All is well.  Tell the caller the font was opened successfully.
             //
-            printf("\n$$OK FONT\n");
+            printf("\n[*][FONT] OK\n");
             g_sFontFile.bInUse = true;
             return((unsigned char *)&g_sFontFile);
         }

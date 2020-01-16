@@ -16,9 +16,9 @@ static void drawItem(tContext *pContext,
                      uint8_t month, uint8_t day)
 {
   char buf[20];
-  uint8_t ispm;
+  uint8_t ispm = 0;
   adjustAMPM(hour, &hour, &ispm);
-
+  printf("hour: %d, ispm: %d\n", hour, ispm);
 
   GrContextForegroundSet(pContext, ClrWhite);
   if (y)
@@ -72,7 +72,7 @@ static void onDraw(tContext *pContext)
       day--;
       hour += 24;
     }
-
+    printf("%s is %d-%d, %d:%d\n", window_readconfig()->worldclock_name[i + index], month, day, hour, minute);
     drawItem(pContext, i * 55,  window_readconfig()->worldclock_name[i + index],
              hour, minute, month, day);
 

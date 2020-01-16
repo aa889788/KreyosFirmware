@@ -476,7 +476,7 @@ void SPI_FLASH_Init(void)
 
   //SPI_Flash_Reset();
 
-  printf("\n$$OK SPIFLASH\n");
+  printf("\n[!][SPIFLASH] init OK\n");
 #if 1
   uint8_t FLASH_Status;
   SPI_FLASH_CS_LOW();
@@ -486,7 +486,7 @@ void SPI_FLASH_Init(void)
   FLASH_Status = SPI_FLASH_SendByte(Dummy_Byte);
   /*失能片选*/
   SPI_FLASH_CS_HIGH();
-  printf("status register 1 = %x ", FLASH_Status);
+  printf("\n[*][SPIFLASH] status register 1 = %x \n", FLASH_Status);
 
   SPI_FLASH_CS_LOW();
   /*发送读状态指令 */
@@ -495,9 +495,9 @@ void SPI_FLASH_Init(void)
   FLASH_Status = SPI_FLASH_SendByte(Dummy_Byte);
   /*失能片选*/
   SPI_FLASH_CS_HIGH();
-  printf("status register 2 = %x ", FLASH_Status);  
+  printf("\n[*][SPIFLASH] status register 2 = %x \n", FLASH_Status);  
 #endif
-  printf("Find SPI Flash DeviceId = %x\n", (uint16_t)SPI_FLASH_ReadDeviceID());
+  printf("\n[*][SPIFLASH] Found SPI Flash DeviceId = %x\n", (uint16_t)SPI_FLASH_ReadDeviceID());
 
 //  SPI_FLASH_BulkErase();
 }

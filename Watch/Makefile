@@ -1,46 +1,45 @@
-ifeq ($(MSPPATH),)
-MSPPATH = /home/junsu/mspgccx/bin
-endif
-CC      = clang 
-OBJCOPY = objcopy
-SIZE    = size
-NM	= nm
-MAKETXT = tools/srec_cat
+IARPATH = "C:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\430"
+WINE    =
+CC      = $(IARPATH)/bin/icc430.exe
+LINK    = $(IARPATH)/bin/xlink.exe
+LIB     = $(IARPATH)/bin/xlib.exe
 ECHO	= echo
 
-TARGET_CPU = msp430f5438a
-MEMORY_MODEL = medium
-#WARNING_FLAGS = -W -Wall
-CFLAGS0  = -g -std=c99 -O0 $(WARNING_FLAGS)\
-	-ffunction-sections -fdata-sections
-LDFLAGS = -g -std=c99 -O0 $(WARNING_FLAGS)
+BUILDNUM = buildnum
+FWVERSION = "1.0.0.$$(cat $(BUILDNUM))"
+BUILDYEAR = $(shell date +"%Y")
+BUILDMONTH = $(shell date +"%m")
+BUILDDAY = $(shell date +"%d")
+BUILDHOUR = $(shell date +"%H")
+BUILDMINUTE = $(shell date +"%M")
+BUILDSECONDS = $(shell date +"%S")
 
-FWVERSION="DEBUG"
+IGNORE_WARNINGS="--diag_suppress Pe167"
 
-CFLAGS = $(CFLAGS0)
-# Support LTO, todo later
-# -flto
-#LDFLAGS += -flto
+CFLAGS  = --debug -D__MSP430F5438A__ -e --double=32 --dlib_config $(IARPATH)/LIB/DLIB/dl430xllfn.h  --core=430X --reduce_stack_usage --data_model=large -On --multiplier=32 --hw_workaround=CPU40 --relaxed_fp --silent --no_wrap_diagnostics -DFWVERSION=\"$(FWVERSION)\" -DBUILDYEAR=\"$(BUILDYEAR)\" -DBUILDMONTH=\"$(BUILDMONTH)\" -DBUILDDAY=\"$(BUILDDAY)\" -DBUILDHOUR=\"$(BUILDHOUR)\" -DBUILDMINUTE=\"$(BUILDMINUTE)\" -DBUILDSECONDS=\"$(BUILDSECONDS)\"
+LDFLAGS = -z -xmsni -I$(IARPATH)/LIB -f ./build/iwatch-lnk430F5438A.xcl -f $(IARPATH)/config/linker/multiplier32.xcl -D_STACK_SIZE=900 -r $(IARPATH)/LIB/DLIB/dl430xllfn.r43 -D_DATA16_HEAP_SIZE=F10 -s __program_start -D_DATA20_HEAP_SIZE=E10 -D__iar_HWMUL=4C0
 
-ALL_DEFINES = AUTOSTART_ENABLE=1 UNITTEST=1 HAVE_ALLOCA_H=0 BYTE_ORDER=LITTLE_ENDIAN PAWN_CELL_SIZE=16 AMX_NATIVETABLE=window_natives HAVE_BLE=1 FWVERSION=\"$(FWVERSION)\"
+LIBS = pedometer/sleepalgo.r43 pedometer/ti_pedometer.r43
+
+ALL_DEFINES = RELEASE_VERSION AUTOSTART_ENABLE=1 HAVE_BLE=1 AMX_ANSIONLY=1 BYTE_ORDER=LITTLE_ENDIAN PAWN_CELL_SIZE=16 HAVE_ALLOCA_H=0 PRODUCT_W001=1 AMX_NATIVETABLE=window_natives
 ALL_INCLUDEDIRS = \
 	. \
 	core \
 	core/lib \
+	cpu/msp430 \
+	ant \
 	platform/common \
-	platform/native \
 	platform/iwatch \
-	btstack/include \
-	btstack/src \
 	platform/common/btstack \
 	platform/iwatch/btstack \
-	unittest \
+	btstack/src \
+  btstack/chipset-cc256x \
+	btstack/include \
 
 #######################################
 # source files
 CORE   = \
-	core/cfs/cfs-coffee.c \
-    core/sys/autostart.c \
+    core/cfs/cfs-coffee.c \
     core/sys/ctimer.c \
     core/sys/etimer.c \
     core/sys/energest.c \
@@ -52,50 +51,128 @@ CORE   = \
     core/lib/list.c
 
 COMMON = \
-	platform/common/memlcd.c
+  platform/common/memlcd.c
 
 PLATFORM = \
-	platform/native/clock.c \
-	platform/native/notimpl.c \
-	platform/native/dev/xmem.c \
-	platform/native/Template_Driver.c
+	platform/iwatch/backlight.c \
+	platform/iwatch/battery.c \
+	platform/iwatch/button.c \
+	platform/iwatch/clock.c \
+	platform/iwatch/flash.c \
+	platform/iwatch/i2c.c \
+	platform/iwatch/isr.c \
+	platform/iwatch/msp430.c \
+  platform/iwatch/contiki-exp5438-main.c \
+	platform/iwatch/rtc.c \
+  platform/iwatch/spiflash.c \
+  platform/iwatch/printf.c \
+  platform/iwatch/system.c \
+  platform/iwatch/progam.c \
+	platform/iwatch/rtimer-arch.c \
+	platform/iwatch/uart1-putchar.c \
+	platform/iwatch/watchdog.c \
+	platform/iwatch/Template_Driver.c
+
+ANT = \
+	ant/antinterface.c \
+	ant/cbsc_rx.c \
+	ant/hrm_rx.c \
+  ant/data.c \
+	platform/iwatch/ant/main_hrm.c \
+	platform/iwatch/ant/serial.c \
+	platform/iwatch/ant/ant_timer.c
 
 GRLIB0 = \
-	circle.c \
-	charmap.c \
-	context.c \
-	image.c \
-	line.c \
-	rectangle.c \
-	triagle.c \
-	string.c
+  circle.c \
+  charmap.c \
+  context.c \
+  image.c \
+  line.c \
+  rectangle.c \
+  triagle.c \
+  string.c
 
 GRLIB_FONTS = \
-	fontgothic14.c \
-	fontgothic18.c \
-	fontgothic18b.c \
-	fontgothic24b.c \
-	fontgothic24b.c \
-	fontgothic28.c \
-	fontgothic28b.c \
-	fonticon16.c \
-	fonticon32.c \
-	fonticon48.c \
-	fontnimbus30.c \
-	fontnimbus38.c \
-	fontnimbus46.c \
-	fontnimbus52.c \
-	fontnimbus34.c \
-	fontnimbus40.c \
-	fontnimbus50.c \
-	fontnimbus91.c \
-	fontunicode.c \
-	logoimg.c
+  fontgothic14.c \
+  fontgothic18.c \
+  fontgothic18b.c \
+  fontgothic24b.c \
+  fontgothic28.c \
+  fontgothic28b.c \
+  fontnimbus30.c \
+  fontnimbus38.c \
+  fontnimbus46.c \
+  fontnimbus52.c \
+  fontnimbus34.c \
+  fontnimbus40.c \
+  fontnimbus50.c \
+  fontnimbus91.c \
+  fonticon16.c \
+  fonticon32.c \
+  fonticon48.c \
+  fontunicode.c \
+  logoimg.c
+
 GRLIB = $(addprefix grlib/, $(GRLIB0)) $(addprefix grlib/fonts/, $(GRLIB_FONTS))
+
+BTSTACK0 = \
+	codec.c \
+	hal.c \
+	hal_compat.c \
+	hal_uart_dma.c \
+  bt_init.c
+
+BTSTACK1 = \
+	ble/att.c \
+  ble/att_client.c \
+  ble/att_server.c \
+  ble/central_device_db_memory.c \
+  ble/sm.c \
+	chipset-cc256x/bluetooth_init_cc2564_2.10.c \
+	chipset-cc256x/bt_control_cc256x.c \
+	src/avctp.c \
+	src/avrcp.c \
+	src/btstack_memory.c \
+	src/hci.c \
+	src/hci_cmds.c \
+	src/hci_dump.c \
+	src/hci_transport_h4_ehcill_dma.c \
+	src/hfp.c \
+	src/l2cap.c \
+	src/l2cap_signaling.c \
+	src/linked_list.c \
+	src/memory_pool.c \
+	src/remote_device_db_memory.c \
+	src/rfcomm.c \
+	src/sdp.c \
+	src/sdp_util.c \
+	src/utils.c
+
+BTSTACK3 = \
+  bluetooth.c \
+  ble_file_handler.c \
+  ble_handler.c \
+  sdp_client.c \
+  spp.c \
+  stlv.c \
+  stlv_client.c \
+  stlv_handler.c \
+  stlv_server.c \
+  stlv_transport.c \
+  run_loop.c \
+
+BTSRCS = $(addprefix btstack/, $(BTSTACK1))
+
+BTSTACK = $(addprefix platform/iwatch/btstack/, $(BTSTACK0))  $(addprefix platform/common/btstack/, $(BTSTACK3))
+
+AMX0 = amx.c amxwindow.c amxstring.c amxcons.c
+AMX = $(addprefix pawnscript/, $(AMX0))
+
+MPL0 = mpu6050.c
+MPL = $(addprefix platform/iwatch/mpl/, $(MPL0))
 
 WATCH = \
     watch/analog-watch.c \
-    watch/btconfig.c \
     watch/configtime.c \
     watch/countdown.c \
     watch/controller.c \
@@ -118,42 +195,36 @@ WATCH = \
     watch/worldclock.c \
     watch/host.c \
     watch/today.c \
-    watch/reset.c \
-    watch/siri.c \
-    watch/status.c \
     watch/test.c \
-    watch/sleep.c \
+    watch/status.c \
+    watch/selftest.c \
+    watch/btconfig.c \
     watch/upgrade.c \
+    watch/reset.c \
+    watch/sleep.c \
+    watch/test.c \
+    watch/siri.c \
     watch/welcome.c \
-    watch/window.c
+    watch/window.c \
+    watch/language.c
 
-BTSTACK= \
-	platform/common/btstack/ble_file_handler.c \
-	platform/common/btstack/ble_handler.c \
-	platform/common/btstack/stlv.c \
-	platform/common/btstack/stlv_client.c \
-	platform/common/btstack/stlv_server.c \
-	platform/common/btstack/stlv_transport.c \
-	platform/common/btstack/stlv_handler.c
+SERVICES= \
+  gesture/gesture.c \
+  pedometer/pedometer_dist.c
+#  pedometer/pedometer.c \
+#  pedometer/pedometer_msp430.c \
 
-PAWN=pawnscript/amx.c pawnscript/amxcons.c pawnscript/amxwindow.c pawnscript/amxstring.c
-
-SRCS = $(BTSTACK) $(CORE) $(PLATFORM) $(GRLIB) $(WATCH) $(PAWN) $(COMMON) \
- unittest/CuTest.c \
- unittest/AllTests.c \
- unittest/bleHandlerTest.c \
- unittest/cfsTest.c \
- unittest/windowTest.c \
- unittest/stlvTest.c \
- unittest/sleepmock.c \
- unittest/gestureTest.c \
- unittest/TestUtility/stlv_test_stub.c \
- unittest/hfpTest.c 
-
-OBJDIR = objs.native
+OBJDIR = objs.msp430
+SRCS = $(CORE) $(WATCH) $(PLATFORM) $(ANT) $(BTSTACK) $(GRLIB) $(MPL) $(SERVICES) $(AMX) $(COMMON)
 OBJS0 = $(SRCS:.c=.o)
 OBJS = $(addprefix $(OBJDIR)/, $(OBJS0))
+
+BTOBJS0 = $(BTSRCS:.c=.o)
+BTOBJS = $(addprefix $(OBJDIR)/, $(BTOBJS0))
+
+ifeq ($(WINE), )
 DEPFILES = $(OBJS:.o=.d)
+endif
 
 #####################
 # rules to build the object files
@@ -162,51 +233,31 @@ $(OBJDIR)/%.o: %.c
 	@test -d $(OBJDIR) || mkdir -pm 775 $(OBJDIR)
 	@test -d $(@D) || mkdir -pm 775 $(@D)
 	@-$(RM) $@
-	@$(CC) $(CFLAGS) $(ALL_DEFINES:%=-D%) $(ALL_INCLUDEDIRS:%=-I%) -c $< -o $@
-
-$(OBJDIR)/%.d: %.c
-	@test -d $(OBJDIR) || mkdir -pm 775 $(OBJDIR)
-	@test -d $(@D) || mkdir -pm 775 $(@D)
-	@-$(RM) $@
-	@$(CC) $(ALL_DEFINES:%=-D%) $(ALL_INCLUDEDIRS:%=-I%) -MM $< -MT $(patsubst %.d, %.o, $@)> $@
-
-
-# create .hex file from .elf
-%.hex: %.elf
-	@$(OBJCOPY) -O ihex $< $@
-	@$(SIZE) $<
-%.txt: %.hex
-	$(MAKETXT) -O $@ -TITXT $< -I
-	unix2dos $
+	@$(WINE) $(CC) $< $(CFLAGS) $(ALL_DEFINES:%=-D%) $(ALL_INCLUDEDIRS:%=-I%) --dependencies=m + -o $@
 
 # create firmware image from common objects and example source file
 
-all: $(DEPFILES) $(OBJS) iwatch
+all: buildnum $(OBJS) $(OBJDIR)/firmware.txt
 
-# if need support loader  $(OBJDIR)/$(OBJDIR)/symbols.o
-iwatch: ${OBJS}
-	@$(ECHO) "Linking $@ second pass"
-	@${CC} $^ ${LDFLAGS} -o $@
+$(OBJDIR)/firmware.txt: ${OBJS} btstack.r43
+	@echo "Link $@"
+	$(WINE) ${LINK} $^ $(LIBS) ${LDFLAGS} -Omsp430_txt=$@ -l $(OBJDIR)/watch.map
 
-flash: iwatch.hex
-	~/bin/mspdebug tilib 'prog iwatch.elf' run
+buildnum: $(OBJS)
+	@echo "Build Number: $$(cat buildnum)"
+ifeq ($(OFFICIAL), 1)
+	@echo $$(($$(cat buildnum) + 1)) > buildnum
+	git commit buildnum -m "pump version to $$(cat buildnum)" 
+	git push
+endif
 
-$(OBJDIR)/iwatch.elf: ${OBJS}
-	@echo "Link $@ first pass"
-	@${CC} $^ ${LDFLAGS} -o $@
-
-$(OBJDIR)/symbols.c: $(OBJDIR)/iwatch.elf
-	@echo "Generate symbol table"
-	@echo "#include \"loader/symbols-def.h\"" > $@
-	@echo "const struct symbols symbols[] = {" >> $@
-	@$(NM) $^ | awk '/([0-9a-f])+ [ABDRST] ([a-zA-Z][0-9A-Za-z_]+)$$/{print "{\"" $$3 "\",(void*)0x" $$1 "}," }' | sort -f -t ','>> $@
-	@echo "{0, 0}};" >> $@
-
+ifeq ($(WINE), )
 ifneq ($(MAKECMDGOALS), clean)
 -include $(DEPFILES)
 endif
+endif
+
 .SILENT:
 .PHONY:	clean
 clean:
-	rm -f $ *.elf *.hex
-	rm -Rf $(OBJDIR)
+	rm -Rf $(OBJDIR)/

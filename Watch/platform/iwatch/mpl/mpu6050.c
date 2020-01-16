@@ -115,9 +115,9 @@ void mpu6050_init()
   I2C_done();
 
   process_start(&mpu6050_process, NULL);
-  printf("Done\n");
+  printf("\n[*][MPU6050] process started\n");
 
-  printf("\n$$OK MPU6050\n");
+  printf("\n[*][MPU6050] OK\n");
   return;
 }
 

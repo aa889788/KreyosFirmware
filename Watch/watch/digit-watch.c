@@ -1,5 +1,6 @@
 
 #include "contiki.h"
+#include "status.h"
 #include "window.h"
 #include "rtc.h"
 #include "math.h"
@@ -12,14 +13,29 @@
 
 #define _hour0 d.digit.hour0
 #define _minute d.digit.minute
+#define _second d.digit.sec
 static uint8_t _selection;
 
 extern uint8_t disable_key;
 
 typedef void (*draw_function)(tContext *pContext);
 
+int count_integer_length(int num){
+  int i = 0;
+  if(num > 0){
+    while(num > 0){
+      i++;
+      num /= 10;
+    }
+  }else{
+    return 1;
+  }
+  return i;
+}
+
 void adjustAMPM(uint8_t hour, uint8_t *outhour, uint8_t *ispm)
 {
+  *ispm = 0;
   if (hour > 12) // 12 - 23
   {
     *ispm = 1;
@@ -46,21 +62,29 @@ static void drawClock0(tContext *pContext)
   rtc_readdate(&year, &month, &day, NULL);
 
   // draw time
+
+  // adjust hour see if it's am or pm
   adjustAMPM(hour, &hour, &ispm);
-
+  // set font
   GrContextFontSet(pContext, (tFont*)&g_sFontExNimbus38);
-
+  // now copy hour and minute to buffer
   sprintf(buf, "%02d:%02d", hour, _minute);
+  // actual drawing
   GrStringDrawCentered(pContext, buf, -1, LCD_WIDTH/2, 60, 0);
 
+  // draw AM/PM
+
+  // get time string size on screen
   int width = GrStringWidthGet(pContext, buf, -1);
   GrContextFontSet(pContext, &g_sFontGothic18);
   if (ispm) buf[0] = 'P';
     else buf[0] = 'A';
   buf[1] = 'M';
-  GrStringDraw(pContext, buf, 2, LCD_WIDTH/2+width/2 - 
-    GrStringWidthGet(pContext, buf, 2) - 2
-    , 84, 0);
+  // draw below time, and adjust it on the right side of the screen
+  GrStringDraw(pContext, buf, 2, LCD_WIDTH/2+width/2 - GrStringWidthGet(pContext, buf, 2) - 2, 84, 0);
+  // now I'll draw seconds on the left side
+  sprintf(buf, (count_integer_length(_second) == 1 ? "0%d": "%d"), _second);
+  GrStringDraw(pContext, buf, 2, LCD_WIDTH/2-width/2, 84, 0);
 
   GrContextFontSet(pContext, &g_sFontGothic18);
   sprintf(buf, "%s %d, %d", toMonthName(month, 1), day, year);
@@ -328,8 +352,8 @@ uint8_t digitclock_process(uint8_t ev, uint16_t lparam, void* rparam)
       _selection = window_readconfig()->digit_clock;
     else
       _selection = (uint8_t)rparam - 1;
-    rtc_enablechange(MINUTE_CHANGE);
-
+    rtc_enablechange(SECOND_CHANGE);
+    status_process(EVENT_WINDOW_CREATED, lparam, rparam);
     return 0x80;
   }
   else if (ev == EVENT_WINDOW_ACTIVE)
@@ -343,14 +367,15 @@ uint8_t digitclock_process(uint8_t ev, uint16_t lparam, void* rparam)
     GrContextForegroundSet(pContext, ClrBlack);
     GrRectFill(pContext, &fullscreen_clip);
     GrContextForegroundSet(pContext, ClrWhite);
-
     Clock_selections[_selection](pContext);
+    status_process(STATUS_PAINT_BATTERY, lparam, rparam);
   }
   else if (ev == EVENT_TIME_CHANGED)
   {
     struct datetime* dt = (struct datetime*)rparam;
     _hour0 = dt->hour;
     _minute = dt->minute;
+    _second = dt->second;
     window_invalid(NULL);
   }
   else if ((ev == EVENT_KEY_PRESSED) && (disable_key == 0))
@@ -373,6 +398,7 @@ uint8_t digitclock_process(uint8_t ev, uint16_t lparam, void* rparam)
       }
       window_invalid(NULL);
     }
+    printf("Now drawing digital clock %d", _selection);
   }
   else if (ev == EVENT_WINDOW_CLOSING)
   {

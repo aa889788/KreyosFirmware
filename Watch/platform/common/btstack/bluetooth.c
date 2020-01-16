@@ -152,7 +152,7 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
 static void btstack_setup(){
   /// GET STARTED with BTstack ///
   btstack_memory_init();
-
+  
   // init HCI
   hci_transport_t    * transport = hci_transport_h4_dma_instance();
   bt_control_t       * control   = bt_control_cc256x_instance();

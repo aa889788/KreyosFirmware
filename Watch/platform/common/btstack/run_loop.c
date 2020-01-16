@@ -66,7 +66,7 @@ PROCESS_THREAD(bluetooth_process, ev, data)
   BUSYWAIT_UNTIL(((BT_CTS_IN & BT_CTS_BIT)==0), RTIMER_SECOND/10);
   if((BT_CTS_IN & BT_CTS_BIT)==0)
   {
-    printf("CTS is ready");
+    printf("\n[*][BT] CTS is ready\n");
   }
 
 

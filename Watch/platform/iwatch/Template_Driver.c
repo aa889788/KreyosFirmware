@@ -180,7 +180,7 @@ static void SPISend(const void* data, unsigned int size)
 void
 memlcd_DriverInit(void)
 {
-  printf("LCD: Initialize...");
+  printf("\n[*][LCD] Initialize...\n");
 
   memlcd_InitScreen();
 
@@ -207,7 +207,7 @@ memlcd_DriverInit(void)
   data.end = 0;
 
   process_start(&lcd_process, NULL);
-  printf("Done\n");
+  printf("\n[*][LCD] Done\n");
 }
 
 void

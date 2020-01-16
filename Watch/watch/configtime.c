@@ -109,7 +109,8 @@ static void OnDrawDate(tContext *pContext)
     GrStringDraw(pContext, buf, 4, LCD_WIDTH/2 - width/2, 100, 0);
   }
 
-  sprintf(buf, "%s", toMonthName(MONTH, 0));
+  if(window_readconfig()->language == 0) sprintf(buf, "%s", toMonthName(MONTH, 0));
+  else sprintf(buf, "%d", MONTH);
   if (state == STATE_CONFIG_MONTH)
   {
     window_selecttext(pContext, buf, 3, 25, 60);

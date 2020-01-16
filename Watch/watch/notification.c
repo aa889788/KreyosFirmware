@@ -71,15 +71,19 @@ static void onDrawTitleBar(tContext *pContext)
 
 static const tFont *get_titlefont()
 {
-  switch(window_readconfig()->font_config)
-  {
-    case 1:
-      return (const tFont*)&g_sFontGothic28b;
-    case 2:
-      return (const tFont*)&g_sFontUnicode;
-      break;
-    default:
-      return (const tFont*)&g_sFontGothic24b;
+  if(window_readconfig()->language == 0){
+    switch(window_readconfig()->font_config)
+    {
+      case 1:
+        return (const tFont*)&g_sFontGothic28b;
+      case 2:
+        return (const tFont*)&g_sFontUnicode;
+        break;
+      default:
+        return (const tFont*)&g_sFontGothic24b;
+    }
+  }else{
+    return (const tFont*)&g_sFontUnicode;
   }
 }
 
@@ -127,7 +131,8 @@ static const char* parse_date(char* date)
     now_timestamp = event_timestamp;
   }
   
-  return toEnglishPeriod(now_timestamp - event_timestamp, date);
+  if(window_readconfig()->language == 0) return toEnglishPeriod(now_timestamp - event_timestamp, date);
+  else return toChinesePeriod(now_timestamp - event_timestamp, date);
 }
 
 static void onDraw(tContext *pContext)
@@ -158,7 +163,7 @@ static void onDraw(tContext *pContext)
       char buffer[20];
 
       strcpy(buffer, message_date);
-      GrContextFontSet(pContext, (tFont*)&g_sFontGothic14);
+      GrContextFontSet(pContext, (tFont*)&g_sFontUnicode);
       const char* text = parse_date(buffer);
       int16_t width = GrStringWidthGet(pContext, text, -1);
       GrStringDraw(pContext, text, -1, LCD_WIDTH - 10 - width, starty, 0);

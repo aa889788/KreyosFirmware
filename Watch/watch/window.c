@@ -49,10 +49,10 @@ static ui_config ui_config_data =
 {
   UI_CONFIG_SIGNATURE, //signature
   10000, 2000, 500, //goals
-  400, //lan_length
+  40, //lap_length
 
-  {"Shanghai", "London", "New York", "Place A", "Place B", "Place C",}, //worldclock_name
-  {+16, +8, +3, +1, +2, -5,}, //worldclock_offset
+  {"Beijing", "London", "New York", "Shanghai", "Guangdong", "Chongqing",}, //worldclock_name
+  {0, -8, -13, 0, 0, 0}, //worldclock_offset
 
   0, //default_clock
   4, //analog_clock
@@ -61,7 +61,7 @@ static ui_config ui_config_data =
   1, //sports_grid
   { 0, 1, 2, 3, 4, }, // sports_grid_data
   0x00, //is_ukunit
-  60, 170, 82, //profiles
+  70, 165, 82, //profiles
   0x00, { 0, 1, 2, 3, }, //gesture
 
   8, 8, // default level of volume and light
@@ -71,7 +71,9 @@ static ui_config ui_config_data =
     {0, 0, 0},
     {0, 0, 0},
   },
-  0
+  2, //font config: 0 = normal, 1 = large, 2 = international(prefer)
+  1, //language: 0 = English, 1 = Simplified Chinese(prefer)
+  0 // flash flag is to auto set a date and time of this firmware complied.
 };
 
 
@@ -94,41 +96,6 @@ static struct etimer timer, status_timer;
 static windowproc stack[MAX_STACK]; // assume 6 is enough
 static uint16_t statusflag = 0; // max 16
 static uint8_t stackptr = 0;
-
-void window_init(uint8_t reason)
-{
-  backlight_on(255, 5 * CLOCK_SECOND);
-
-  current_clip = client_clip;
-  memlcd_DriverInit();
-  GrContextInit(&context, &g_memlcd_Driver);
-  printf("WIN: Initialize...");
-  GrContextForegroundSet(&context, ClrBlack);
-  tRectangle rect = {0, 0, LCD_WIDTH, LCD_Y_SIZE};
-  GrRectFill(&context, &rect);
-
-  GrContextForegroundSet(&context, ClrWhite);
-  GrContextBackgroundSet(&context, ClrBlack);
-
-  if (reason == 0xff)
-  {
-    GrImageDraw(&context, logoPixel, 8, 40);
-
-    // draw the text
-    GrContextFontSet(&context, &g_sFontGothic18);
-    GrStringDrawWrap(&context, "Installation in progress,\nplease wait...", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);
-  }
-  else
-  {
-      GrImageDraw(&context, logoPixel, 8, 60);
-  }
-
-  GrFlush(&context);
-  stackptr = 0;
-  //window_open(&menu_process, NULL);
-  printf("Done\n");
-  return;
-}
 
 void window_open(windowproc dialog, void* data)
 {
@@ -327,6 +294,7 @@ static void window_handle_event(uint8_t ev, void* data)
 PROCESS_THREAD(system_process, ev, data)
 {
   PROCESS_BEGIN();
+  
   if (
     system_testing())
     ui_window = menu_process;
@@ -334,7 +302,7 @@ PROCESS_THREAD(system_process, ev, data)
     ui_window = welcome_process;
   else
     ui_window = menu_process;
-
+  
   while(1)
   {
     window_handle_event(ev, data);
@@ -528,30 +496,32 @@ static uint8_t messagebox_process(uint8_t ev, uint16_t lparam, void* rparam)
 
       if (messagebox_flags & NOTIFY_ALARM)
       {
-        GrContextFontSet(pContext, (tFont*)&g_sFontGothic24b);
+        if(window_readconfig()->language == 0) GrContextFontSet(pContext, (tFont*)&g_sFontGothic24b);
+        else GrContextFontSet(pContext, (const tFont*)&g_sFontUnicode);
       }
       else
       {
-        GrContextFontSet(pContext, (tFont*)&g_sFontGothic18);
+        if(window_readconfig()->language == 0) GrContextFontSet(pContext, (tFont*)&g_sFontGothic18);
+        else GrContextFontSet(pContext, (const tFont*)&g_sFontUnicode);
       }
       GrStringDrawWrap(pContext, messagebox_message, 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);
 
       if (messagebox_flags & NOTIFY_CONFIRM)
       {
-        window_button(pContext, KEY_ENTER | 0x80, "Confirm");
+        window_button(pContext, KEY_ENTER | 0x80, window_readconfig()->language == 0 ? "Confirm" : "确认");
       }
       else if (messagebox_flags & NOTIFY_ALARM)
       {
-        window_button(pContext, KEY_ENTER | 0x80, "Dismiss");
+        window_button(pContext, KEY_ENTER | 0x80, window_readconfig()->language == 0 ? "Dismiss" : "忽略");
       }
       else if (messagebox_flags & NOTIFY_OK)
       {
-        window_button(pContext, KEY_ENTER | 0x80, "OK");
+        window_button(pContext, KEY_ENTER | 0x80, window_readconfig()->language == 0 ? "OK" : "好");
       }
       else if (messagebox_flags & NOTIFY_YESNO)
       {
-        window_button(pContext, KEY_ENTER | 0x80, "YES");
-        window_button(pContext, KEY_DOWN | 0x80, "NO"); 
+        window_button(pContext, KEY_ENTER | 0x80, window_readconfig()->language == 0 ? "YES" : "是");
+        window_button(pContext, KEY_DOWN | 0x80, window_readconfig()->language == 0 ? "NO" : "否"); 
       }
       break;
     }
@@ -607,4 +577,43 @@ void window_messagebox(uint8_t icon, const char* message, uint8_t flags)
   }
   
   window_open(&messagebox_process, NULL);
+}
+
+void window_init(uint8_t reason)
+{
+  backlight_on(255, 5 * CLOCK_SECOND);
+
+  current_clip = client_clip;
+  memlcd_DriverInit();
+  GrContextInit(&context, &g_memlcd_Driver);
+  printf("\n[*][Window] Initialize...\n");
+  GrContextForegroundSet(&context, ClrBlack);
+  tRectangle rect = {0, 0, LCD_WIDTH, LCD_Y_SIZE};
+  GrRectFill(&context, &rect);
+
+  GrContextForegroundSet(&context, ClrWhite);
+  GrContextBackgroundSet(&context, ClrBlack);
+  printf("\n[*][Window] reason: %d\n", reason);
+  if (reason == 0xff)
+  {
+    GrImageDraw(&context, logoPixel, 8, 40);
+
+    // draw the text
+    GrContextFontSet(&context, &g_sFontGothic18);
+    GrStringDrawWrap(&context, "Installation in progress,\nplease wait...", 10, 100, LCD_WIDTH - 20, ALIGN_CENTER);
+    printf("\n[*][Window] Setting up for installation...\n");
+  }
+  else
+  {
+      GrImageDraw(&context, logoPixel, 8, 60);
+      GrContextFontSet(&context, &g_sFontGothic18);
+      GrStringDrawWrap(&context, "Starting up...", 12, 100, LCD_WIDTH - 20, ALIGN_CENTER);
+      printf("\n[*][Window] Starting system...\n");
+  }
+
+  GrFlush(&context);
+  stackptr = 0;
+  //window_open(&menu_process, NULL);
+  printf("\n[*][Window] Done\n");
+  return;
 }

@@ -101,7 +101,8 @@ void window_button(tContext *pContext, uint8_t key, const char* text)
     forecolor = ClrWhite;
     backcolor = ClrBlack;
   }
-  GrContextFontSet(pContext, &g_sFontGothic18);
+  if(window_readconfig()->language == 0) GrContextFontSet(pContext, &g_sFontGothic18);
+  else GrContextFontSet(pContext, (const tFont*)&g_sFontUnicode);
 
 
   // draw black box
@@ -127,7 +128,8 @@ void window_button(tContext *pContext, uint8_t key, const char* text)
     }
 
     GrContextForegroundSet(pContext, backcolor);
-    GrStringDrawCentered(pContext, text, -1, (rect->sXMin + rect->sXMax) /2, (rect->sYMin + rect->sYMax) /2, 0);
+    if(window_readconfig()->language == 0) GrStringDrawCentered(pContext, text, -1, (rect->sXMin + rect->sXMax) /2, (rect->sYMin + rect->sYMax) /2, 0);
+    else GrStringDrawCentered(pContext, text, -1, (rect->sXMin + rect->sXMax) /2, (rect->sYMin + rect->sYMax) /2 - 2, 0);
   }
   else
   {

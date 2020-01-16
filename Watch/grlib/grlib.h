@@ -1788,6 +1788,8 @@ extern const tFont g_sFontCmtt48;
 extern const tFont g_sFontFixed6x8;
 #define g_pFontFixed6x8 (const tFont *)&g_sFontFixed6x8
 
+
+
 //*****************************************************************************
 //
 // Language identifiers supported by the string table processing functions.

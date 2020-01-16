@@ -397,7 +397,7 @@ uint8_t analogclock_process(uint8_t ev, uint16_t lparam, void* rparam)
       selection = sizeof(FaceSelections)/sizeof(struct clock_draw) - 1;
 
     rtc_enablechange(MINUTE_CHANGE);
-
+    status_process(EVENT_WINDOW_CREATED, lparam, rparam);
     return 0x80;
   }
   else if (ev == EVENT_WINDOW_ACTIVE)
@@ -414,6 +414,7 @@ uint8_t analogclock_process(uint8_t ev, uint16_t lparam, void* rparam)
 
     FaceSelections[selection].faceDraw(pContext);
     FaceSelections[selection].handDraw(pContext);
+    status_process(STATUS_PAINT_BATTERY, lparam, rparam);
   }
   else if (ev == EVENT_TIME_CHANGED)
   {

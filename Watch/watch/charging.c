@@ -9,6 +9,7 @@
 uint8_t state = 0;
 uint8_t charging_process(uint8_t ev, uint16_t lparam, void* rparam)
 {
+	uint8_t current_language = window_readconfig()->language;
   switch(ev)
   {
   	case EVENT_WINDOW_ACTIVE:
@@ -66,25 +67,40 @@ uint8_t charging_process(uint8_t ev, uint16_t lparam, void* rparam)
 	  {
 	  	char icon = ICON_LARGE_BATTERY_LEVEL4;
 	  	GrStringDrawCentered(pContext, &icon, 1, LCD_WIDTH/2, 37, 0);
-
-	  	GrContextFontSet(pContext, (tFont*)&g_sFontGothic24b);
-	  	GrStringDrawWrap(pContext, "Battery is fully charged.", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);
+		if(current_language == 0){
+			GrContextFontSet(pContext, (tFont*)&g_sFontGothic24b);
+	  		GrStringDrawWrap(pContext, "Charged! :)", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);
+		}else{
+			GrContextFontSet(pContext, (const tFont*)&g_sFontUnicode);
+	  		GrStringDrawWrap(pContext, ":) 已充满", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);
+		}
+	  	
 	  }
 	  else if (state == 6)
 	  {
 	  	char icon = ICON_LARGE_LOWBATTERY;
 	  	GrStringDrawCentered(pContext, &icon, 1, LCD_WIDTH/2, 37, 0);
 
-	  	GrContextFontSet(pContext, (tFont*)&g_sFontGothic24b);
-	  	GrStringDrawWrap(pContext, "LOW BATTERY\nConnect charger now.", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);	  	
+	  	if(current_language == 0){
+			GrContextFontSet(pContext, (tFont*)&g_sFontGothic24b);
+	  		GrStringDrawWrap(pContext, "LOW BATTERY\nConnect charger now.", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);	  	
+		}else{
+			GrContextFontSet(pContext, (const tFont*)&g_sFontUnicode);
+			GrStringDrawWrap(pContext, "请连接充电器", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);
+		}
 	  }
 	  else
 	  {
 	  	char icon = ICON_LARGE_BATTERY_LEVEL1 + state;
 	  	GrStringDrawCentered(pContext, &icon, 1, LCD_WIDTH/2, 37, 0);
 
-		GrContextFontSet(pContext, (tFont*)&g_sFontGothic24b);
-	  	GrStringDrawWrap(pContext, "Battery is charging.", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);
+		if(current_language == 0){
+			GrContextFontSet(pContext, (tFont*)&g_sFontGothic24b);
+		  	GrStringDrawWrap(pContext, "Charging...", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);
+		}else{
+			GrContextFontSet(pContext, (const tFont*)&g_sFontUnicode);
+			GrStringDrawWrap(pContext, "正在充电...", 10, 90, LCD_WIDTH - 20, ALIGN_CENTER);
+		}
 	  }
       break;
 	}

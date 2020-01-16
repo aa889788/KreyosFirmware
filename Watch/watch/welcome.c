@@ -102,6 +102,11 @@ uint8_t welcome_process(uint8_t ev, uint16_t lparam, void* rparam)
 		  }
 
     case EVENT_EXIT_PRESSED:
+    {
+      system_unlock();
+      window_invalid(NULL);
+      return 1;
+    }
     break;
 
 		case EVENT_KEY_PRESSED:

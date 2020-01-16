@@ -15,7 +15,7 @@ static enum { STATE_IDL, STATE_RUNNING, STATE_DONE, STATE_ERROR} state;
 
 void I2C_Init()
 {
-  printf("I2C: Initialize...");
+  printf("\n[*][I2C] Initialize...\n");
   // initialize i2c UCB1
   UCB1CTL1 |= UCSWRST;
 
@@ -41,7 +41,7 @@ void I2C_Init()
   P5SEL |= BIT4;
 
   UCB1CTL1 &= ~UCSWRST;
-  printf("\n$$OK I2C\n");
+  printf("\n[*][I2C] OK\n");
 }
 
 void I2C_shutdown()

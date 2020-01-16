@@ -91,12 +91,28 @@ main(int argc, char **argv)
   */
   msp430_cpu_init();
   clock_init();
-
+  
   uart_init(9600); /* Must come before first printf */
 
   /* xmem_init(); */
 
-  PRINTF("iWatch 0.10 build at " __TIME__ " " __DATE__ "\n");
+  PRINTF("\n");
+  PRINTF("**********************************************\n");
+  PRINTF("*            Contiki on Kreyos watch         *\n");
+  PRINTF("*                                            *\n");
+  PRINTF("* This software is developed using Contiki   *\n");
+  PRINTF("* system and suspend by a currently broken   *\n");
+  PRINTF("* company Kreyos, this version is build by   *\n");
+  PRINTF("* it's fan and should not take responsiblity *\n");
+  PRINTF("* of anything.                               *\n");
+  PRINTF("* And also due to some legal problem, this   *\n");
+  PRINTF("* is only for education perpurse, and        *\n");
+  PRINTF("* resources it'll NEVER public released.     *\n");
+  PRINTF("**********************************************\n");
+  PRINTF("* According to Chinese \"Computer Software    *\n");
+  PRINTF("* Protection Regulations\" under section 2    *\n");
+  PRINTF("* and regulation 17 to develop this firmware.*\n");
+  PRINTF("**********************************************\n");
   UCSCTL8 &= ~BIT2;
   
   /*
@@ -118,7 +134,21 @@ main(int argc, char **argv)
   backlight_init();
   battery_init();
   SPI_FLASH_Init();
+  char bufY[5];
+  char bufM[3];
+  char bufD[3];
+  char bufH[3];
+  char bufN[3];
+  char bufS[3];
+  strcpy(bufY, BUILDYEAR);
+  strcpy(bufM, BUILDMONTH);
+  strcpy(bufD, BUILDDAY);
+  strcpy(bufH, BUILDHOUR);
+  strcpy(bufN, BUILDMINUTE);
+  strcpy(bufS, BUILDSECONDS);
+  PRINTF("\n[*][MAIN] Compiled at %d-%d-%d %d:%d:%d\n", atoi(bufY), atoi(bufM), atoi(bufD), atoi(bufH), atoi(bufN), atoi(bufS));
 
+#if 0
   if (system_testing())
   {
     clock_time_t t;
@@ -132,13 +162,11 @@ main(int argc, char **argv)
     while(clock_seconds() - t <= 3);
     backlight_on(0, 0);
 
-    motor_on(200, 0);
+    motor_on(100, 0);
     // sleep 1s
-    t = clock_seconds();
-    while(clock_seconds() - t <= 3);
+    //t = clock_seconds();
+    //while(clock_seconds() - t <= 1);
     printf("$$OK MOTOR\n");
-    t = clock_seconds();
-    while(clock_seconds() - t <= 3);
     motor_on(0, 0);
 
 #if PRODUCT_W001
@@ -153,11 +181,10 @@ main(int argc, char **argv)
     t = clock_seconds();
     while(clock_seconds() - t <= 3);
     codec_bypass(0);
-
     codec_shutdown();
 #endif
   }
-
+#endif
   int reason = CheckUpgrade();
 
   window_init(reason);
@@ -165,14 +192,14 @@ main(int argc, char **argv)
   button_init();
   rtc_init();
   CFSFontWrapperLoad();
-
-  system_init(); // check system status and do factor reset if needed
-
   I2C_Init();
+  
+  system_init(); // check system status and do factor reset if needed
 
   //codec_init();
   //ant_init();
   bluetooth_init();
+
 
 #ifdef PRODUCT_W004
   //bmx_init();
@@ -194,7 +221,7 @@ main(int argc, char **argv)
 
     system_setemerging();
     motor_on(0, 0);
-  }  
+  }
   
   if (!system_retail())
   {
@@ -212,7 +239,14 @@ main(int argc, char **argv)
 //  protocol_start(1);
   
   process_start(&system_process, NULL);
-
+  if(window_readconfig()->flash_flag == 0){
+    //auto set a complied date.
+    rtc_setdate(atoi(bufY), atoi(bufM), atoi(bufD));
+    rtc_settime(atoi(bufH), atoi(bufN)+2, atoi(bufS));
+    //to prevent every reboot to set a time, lock this flag
+    window_readconfig()->flash_flag = 1;
+    window_writeconfig();
+  }
   /*
   * This is the scheduler loop.
   */
@@ -223,7 +257,7 @@ main(int argc, char **argv)
     */
   if (reason == 0xff)
   {
-    printf("Start Upgrade\n");
+    printf("\n[*][MAIN] Start Upgrade\n");
     Upgrade();
     // never return if sucessfully upgrade
   }

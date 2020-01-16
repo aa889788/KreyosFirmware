@@ -26,11 +26,32 @@ static void drawItem(tContext *pContext, uint8_t n, char icon, const char* text,
     }
 
   // draw text
-  GrContextFontSet(pContext, &g_sFontGothic24b);
+  if(window_readconfig()->language == 0) GrContextFontSet(pContext, &g_sFontGothic24b);
+  else GrContextFontSet(pContext, (const tFont*)&g_sFontUnicode);
   GrStringDraw(pContext, text, -1, 20, 10 + n * LINEMARGIN, 0);
 
   uint8_t width = GrStringWidthGet(pContext, value, -1);
   GrStringDraw(pContext, value, -1, LCD_WIDTH - width - 4, 10 + n * LINEMARGIN, 0);
+}
+
+static int get_int_length(int num){
+  int i = 0;
+  while(num > 0){
+    num /= 10;
+    i++;
+  }
+  return i;
+}
+
+static int get_integer_part(int num){
+  if(get_int_length(num) <= 2) return 0;
+  return (num / 100);
+}
+
+static int get_mod_part(int num){
+  if(get_int_length(num) <= 2) return num;
+  return (num % 10 + num % 100);
+  
 }
 
 static void onDraw(tContext *pContext)
@@ -44,18 +65,30 @@ static void onDraw(tContext *pContext)
   if (state == WALK)
   {
     sprintf(buf, "%d", ped_get_steps());
-    drawItem(pContext, 0, ICON_STEPS, "Steps", buf);
+    if(window_readconfig()->language == 0) drawItem(pContext, 0, ICON_STEPS, "Steps", buf);
+    else drawItem(pContext, 0, ICON_STEPS, "步", buf);
 
     uint16_t cals = ped_get_calorie() / 100 / 1000;
     sprintf(buf, "%d", cals);
-    drawItem(pContext, 1, ICON_CALORIES, "Calories", buf);
+    if(window_readconfig()->language == 0) drawItem(pContext, 1, ICON_CALORIES, "Calories", buf);
+    else drawItem(pContext, 1, ICON_CALORIES, "大卡", buf);
 
-    uint16_t dist = ped_get_distance() / 100;
-    sprintf(buf, "%dm", dist);
-    drawItem(pContext, 2, ICON_DISTANCE, "Distance", buf);
+    float dist = (float)ped_get_distance() / 100;
+
+    printf("%d%.%d", get_integer_part(ped_get_distance()), get_mod_part(ped_get_distance()));
+
+    /*if(get_int_length(ped_get_distance) <= 2){
+      sprintf(buf, "0.%dm", dist);
+    }else{
+      
+    }*/
+    sprintf(buf, "%.2fm", dist);
+    if(window_readconfig()->language == 0) drawItem(pContext, 2, ICON_DISTANCE, "Distance", buf);
+    else drawItem(pContext, 2, ICON_DISTANCE, "距离", buf);
 
     sprintf(buf, "%02d:%02d", ped_get_time() / 60, ped_get_time() % 60);
-    drawItem(pContext, 3, ICON_TIME, "Active", buf);
+    if(window_readconfig()->language == 0) drawItem(pContext, 3, ICON_TIME, "Active", buf);
+    else drawItem(pContext, 3, ICON_TIME, "活动时间", buf);
 
     // draw progress
 
@@ -66,7 +99,8 @@ static void onDraw(tContext *pContext)
       window_progress(pContext, 5 + 4 * LINEMARGIN, steps * 100 / goal);
     else
       window_progress(pContext, 5 + 4 * LINEMARGIN, 100);
-    sprintf(buf, "%d%% of %d", (uint16_t)(steps * 100 / goal), goal);
+    if(window_readconfig()->language == 0)sprintf(buf, "%d% of %d", (uint16_t)(steps * 100 / goal), goal);
+    else sprintf(buf, "%d%%达成%d步", (uint16_t)(steps * 100 / goal), goal);
     GrContextForegroundSet(pContext, ClrWhite);
     GrStringDrawCentered(pContext, buf, -1, LCD_WIDTH/2, 148, 0);
   }

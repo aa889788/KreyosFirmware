@@ -47,8 +47,7 @@ static const ble_handle_t s_ble_handle_table[] = {
     DEF_BLE_HANDLE("ff21", BLE_HANDLE_CONF_WATCHFACE,    BLE_HANDLE_TYPE_INT8_ARR,  1),
     DEF_BLE_HANDLE("ff22", BLE_HANDLE_CONF_GOALS,        BLE_HANDLE_TYPE_INT16_ARR, 3),
     DEF_BLE_HANDLE("ff23", BLE_HANDLE_CONF_USER_PROFILE, BLE_HANDLE_TYPE_INT8_ARR,  3),
-    DEF_BLE_HANDLE("ff24", BLE_HANDLE_TODAY_ACTIVITY,    BLE_HANDLE_TYPE_INT32_ARR, 4),
-    DEF_BLE_HANDLE("ff25", BLE_HANDLE_CONF_USER_PROFILE, BLE_HANDLE_TYPE_INT8_ARR,  3),
+    DEF_BLE_HANDLE("ff24", BLE_HANDLE_TODAY_ACTIVITY,    BLE_HANDLE_TYPE_INT32_ARR, 4)
 };
 
 uint16_t BLE_READ_INT16(uint8_t* buf)
@@ -110,7 +109,7 @@ static void att_write_world_clock(uint8_t id, char* buf)
     for (; i > 0; --i)
     {
         if (buf[i] == ']')
-            continue;
+            continue; // if the last member of buf is equal to ']', then try to prase the timezone.
 
         offset = offset * 10 * shift + buf[i] - '0';
 
@@ -337,42 +336,48 @@ static uint16_t att_handler_internal(uint16_t handle, uint16_t offset, uint8_t *
             }
             break;
 
-        case BLE_HANDLE_CONF_WORLDCLOCK_0:
+        case BLE_HANDLE_CONF_WORLDCLOCK_0:{
+            printf("buffer: %s\nsize: %d", (char*)buffer, buffer_size);
             if (mode == ATT_HANDLE_MODE_READ)
                 att_read_world_clock(0, (char*)buffer, buffer_size);
             else
                 att_write_world_clock(0, (char*)buffer);
-            break;
-        case BLE_HANDLE_CONF_WORLDCLOCK_1:
+            break;}
+        case BLE_HANDLE_CONF_WORLDCLOCK_1:{
+            printf("buffer: %s\nsize: %d", (char*)buffer, buffer_size);
             if (mode == ATT_HANDLE_MODE_READ)
                 att_read_world_clock(1, (char*)buffer, buffer_size);
             else
                 att_write_world_clock(1, (char*)buffer);
-            break;
-        case BLE_HANDLE_CONF_WORLDCLOCK_2:
+            break;}
+        case BLE_HANDLE_CONF_WORLDCLOCK_2:{
+            printf("buffer: %s\nsize: %d", (char*)buffer, buffer_size);
             if (mode == ATT_HANDLE_MODE_READ)
                 att_read_world_clock(2, (char*)buffer, buffer_size);
             else
                 att_write_world_clock(2, (char*)buffer);
-            break;
-        case BLE_HANDLE_CONF_WORLDCLOCK_3:
+            break;}
+        case BLE_HANDLE_CONF_WORLDCLOCK_3:{
+            printf("buffer: %s\nsize: %d", (char*)buffer, buffer_size);
             if (mode == ATT_HANDLE_MODE_READ)
                 att_read_world_clock(3, (char*)buffer, buffer_size);
             else
                 att_write_world_clock(3, (char*)buffer);
-            break;
-        case BLE_HANDLE_CONF_WORLDCLOCK_4:
+            break;}
+        case BLE_HANDLE_CONF_WORLDCLOCK_4:{
+            printf("buffer: %s\nsize: %d", (char*)buffer, buffer_size);
             if (mode == ATT_HANDLE_MODE_READ)
                 att_read_world_clock(4, (char*)buffer, buffer_size);
             else
                 att_write_world_clock(4, (char*)buffer);
-            break;
-        case BLE_HANDLE_CONF_WORLDCLOCK_5:
+            break;}
+        case BLE_HANDLE_CONF_WORLDCLOCK_5:{
+            printf("buffer: %s\nsize: %d", (char*)buffer, buffer_size);
             if (mode == ATT_HANDLE_MODE_READ)
                 att_read_world_clock(5, (char*)buffer, buffer_size);
             else
                 att_write_world_clock(5, (char*)buffer);
-            break;
+            break;}
 
         case BLE_HANDLE_CONF_WATCHFACE:
             if (mode == ATT_HANDLE_MODE_READ)
@@ -392,6 +397,7 @@ static uint16_t att_handler_internal(uint16_t handle, uint16_t offset, uint8_t *
                 window_writeconfig();
                 window_loadconfig();
             }
+            printf("[0]:%d\n[1]:%d", buffer[0], buffer[1]);
             break;
 
         case BLE_HANDLE_CONF_GOALS:
@@ -418,6 +424,7 @@ static uint16_t att_handler_internal(uint16_t handle, uint16_t offset, uint8_t *
 
                 window_writeconfig();
                 window_loadconfig();
+                printf("Step set to %d, distance set to %d, calories set to %d", BLE_READ_INT16(&buffer[0]), BLE_READ_INT16(&buffer[2]), BLE_READ_INT16(&buffer[4]));
             }
             break;
 

@@ -109,7 +109,7 @@ void system_restore()
     CRCDIRB_L = *d;
 
   if (globaldata.checksum == CRCINIRES && 
-    globaldata.now.year < 2050 && 
+    globaldata.now.year < 2100 && 
     globaldata.now.month <= 12 && 
     globaldata.now.day <= 31)
     rtc_restore(); // rtc have to restore since it has hardware registers

@@ -13,7 +13,7 @@ extern union _data
 
   struct
   {
-    uint8_t hour0, minute;
+    uint8_t hour0, minute, sec;
   }digit;
 
   struct

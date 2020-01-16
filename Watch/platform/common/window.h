@@ -53,6 +53,8 @@ PROCESS_NAME(system_process);
 
 #define EVENT_FIRMWARE_UPGRADE        0xaa // parameter is rparameter, offset
 
+#define STATUS_PAINT_BATTERY          0xd2
+
 typedef uint8_t (*windowproc)(uint8_t event, uint16_t lparam, void* rparam);
 
 extern void window_init(uint8_t reason);
@@ -122,12 +124,15 @@ extern uint8_t siri_process(uint8_t ev, uint16_t lparam, void* rparam);
 extern uint8_t sportwait_process(uint8_t ev, uint16_t lparam, void* rparam);
 extern uint8_t configvol_process(uint8_t event, uint16_t lparam, void* rparam);
 extern uint8_t configlight_process(uint8_t event, uint16_t lparam, void* rparam);
+extern uint8_t language_process(uint8_t event, uint16_t lparam, void* rparam);
 extern uint8_t upgrade_process(uint8_t ev, uint16_t lparam, void* rparam);
 extern uint8_t welcome_process(uint8_t ev, uint16_t lparam, void* rparam);
 extern uint8_t about_process(uint8_t ev, uint16_t lparam, void* rparam);
 extern uint8_t reset_process(uint8_t ev, uint16_t lparam, void* rparam);
 extern uint8_t charging_process(uint8_t ev, uint16_t lparam, void* rparam);
 extern uint8_t configalarm_process(uint8_t event, uint16_t lparam, void* rparam);
+extern uint8_t reboot_process(uint8_t ev, uint16_t lparam, void *rparam);
+extern uint8_t test_switch(uint8_t ev, uint16_t lparam, void *rparam);
 #if defined(PRODUCT_W002) || defined(PRODUCT_W004)  
 extern uint8_t weather_process(uint8_t ev, uint16_t lparam, void* rparam);
 extern uint8_t compass_process(uint8_t ev, uint16_t lparam, void* rparam);
@@ -192,6 +197,8 @@ typedef struct {
   alarm_t alarms[MAX_ALARM_COUNT];
   // config 0 - Normal, 1 - Larger, 2 - CJK
   uint8_t font_config;
+  uint8_t language;
+  uint8_t flash_flag;
 }ui_config;
 
 extern ui_config* window_readconfig();
@@ -200,10 +207,18 @@ extern void window_loadconfig();
 
 // the const strings
 extern const char * const week_shortname[];
+extern const char * const month_name_CN[];
+extern const char * const month_shortname_CN[];
+extern const char * const week_shortname_CN[];
 extern const char * const fontconfig_name[];
+extern const char * const fontconfig_name_CN[];
+extern const char * const language_list[];
+extern const char * const language_list_CN[];
 extern const char * toEnglish(uint8_t number, char* buffer);
 extern const char * toEnglishPeriod(uint32_t seconds, char* buffer);
-extern const char* toMonthName(uint8_t month, int shortorlong);
+extern const char * toChinesePeriod(uint32_t seconds, char* buffer);
+extern const char * toMonthName(uint8_t month, int shortorlong);
+extern const char * toChineseMonthName(uint8_t month, int shortorlong);
 extern const char * PairingWarning;
 
 // #define EVENT_SPORT_DATA              0x92
