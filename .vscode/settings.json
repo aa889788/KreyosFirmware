@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "bluetooth.h": "c",
+        "random": "c",
+        "profile.h": "c",
+        "remote_device_db.h": "c",
+        "bt_control.h": "c",
+        "gap.h": "c",
+        "utils.h": "c",
+        "hci_transport.h": "c",
+        "btstack-config.h": "c"
+    }
+}

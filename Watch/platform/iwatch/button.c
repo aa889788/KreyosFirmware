@@ -35,7 +35,7 @@ void button_init()
   process_start(&button_process, NULL);
 
   etimer_stop(&button_timer);
-  for(i = 0; i < 4; i++)
+  for (i = 0; i < 4; i++)
   {
     uint8_t bitmask;
 
@@ -62,7 +62,7 @@ int button_snapshot()
 {
   int ret;
   ret = 0;
-  for(int i = 0; i <3; i++)
+  for (int i = 0; i < 3; i++)
   {
     if (!(P2IN & (getmask(i))))
       ret |= (1 << i);
@@ -73,39 +73,39 @@ int button_snapshot()
 PROCESS_THREAD(button_process, ev, data)
 {
   PROCESS_BEGIN();
-  while(1)
+  while (1)
   {
     PROCESS_WAIT_EVENT();
     if (ev == PROCESS_EVENT_POLL)
     {
-      for(int i = 0; i < 4; i++)
+      for (int i = 0; i < 4; i++)
       {
         uint8_t mask = getmask(i);
 
-       // if ((P2IE & mask) == 0)
+        // if ((P2IE & mask) == 0)
         {
           // need handle this button
           if (((P2IN & mask) == 0) && ((P2IES & mask) != 0)) // button is down
           {
             // key is down
-            //process_post(ui_process, EVENT_KEY_DOWN, (void*)i);
-            downtime[i] = eventtime[i]; 
+            // process_post(ui_process, EVENT_KEY_DOWN, (void*)i);
+            downtime[i] = eventtime[i];
             if (etimer_expired(&button_timer))
             {
               // first button
-              etimer_set(&button_timer, CLOCK_SECOND/2);
+              etimer_set(&button_timer, CLOCK_SECOND / 2);
             }
             P2IES ^= mask;
           }
-          else if (((P2IN & mask) != 0) && ((P2IES & mask) == 0)) 
+          else if (((P2IN & mask) != 0) && ((P2IES & mask) == 0))
           {
-            //process_post(ui_process, EVENT_KEY_UP, (void*)i);
+            // process_post(ui_process, EVENT_KEY_UP, (void*)i);
             if (downtime[i] > 0)
             {
               if (eventtime[i] - downtime[i] > RTIMER_SECOND)
-                process_post(ui_process, EVENT_KEY_LONGPRESSED, (void*)i);
+                process_post(ui_process, EVENT_KEY_LONGPRESSED, (void *)i);
               else
-                process_post(ui_process, EVENT_KEY_PRESSED, (void*)i);
+                process_post(ui_process, EVENT_KEY_PRESSED, (void *)i);
             }
             downtime[i] = 0;
             P2IES ^= mask;
@@ -115,7 +115,7 @@ PROCESS_THREAD(button_process, ev, data)
             if (etimer_expired(&button_timer))
             {
               // first button
-              etimer_set(&button_timer, CLOCK_SECOND/2);
+              etimer_set(&button_timer, CLOCK_SECOND / 2);
             }
           }
           else if (((P2IN & mask)) && ((P2IES & mask))) // key is still up
@@ -126,14 +126,13 @@ PROCESS_THREAD(button_process, ev, data)
           P2IE |= mask;
         }
       }
-
     }
     else if (ev == PROCESS_EVENT_TIMER)
     {
       uint8_t reboot = 0;
       uint8_t downbutton = 0;
       uint8_t needquick = 0;
-      for(int i = 0; i < 4; i++)
+      for (int i = 0; i < 4; i++)
       {
         PRINTF("button %d downtime: %ld\n", i, downtime[i]);
         if (downtime[i] > 0)
@@ -145,7 +144,7 @@ PROCESS_THREAD(button_process, ev, data)
           if (downtime[i] < RTIMER_NOW() - RTIMER_SECOND)
           {
             // check if we need fire another event
-            process_post(ui_process, EVENT_KEY_PRESSED, (void*)i);
+            process_post(ui_process, EVENT_KEY_PRESSED, (void *)i);
             needquick++;
           }
         }
@@ -159,15 +158,14 @@ PROCESS_THREAD(button_process, ev, data)
       if (downbutton)
       {
         if (needquick)
-          etimer_set(&button_timer, CLOCK_SECOND/4);
+          etimer_set(&button_timer, CLOCK_SECOND / 4);
         else
-          etimer_set(&button_timer, CLOCK_SECOND/2);
+          etimer_set(&button_timer, CLOCK_SECOND / 2);
       }
       else
       {
-          etimer_stop(&button_timer);
+        etimer_stop(&button_timer);
       }
-
     }
   }
   PROCESS_END();
