@@ -19,7 +19,7 @@ IGNORE_WARNINGS="--diag_suppress Pe167"
 CFLAGS  = --debug -D__MSP430F5438A__ -e --double=32 --dlib_config $(IARPATH)/LIB/DLIB/dl430xllfn.h  --core=430X --reduce_stack_usage --data_model=large -On --multiplier=32 --hw_workaround=CPU40 --relaxed_fp --silent --no_wrap_diagnostics -DFWVERSION=\"$(FWVERSION)\" -DBUILDYEAR=\"$(BUILDYEAR)\" -DBUILDMONTH=\"$(BUILDMONTH)\" -DBUILDDAY=\"$(BUILDDAY)\" -DBUILDHOUR=\"$(BUILDHOUR)\" -DBUILDMINUTE=\"$(BUILDMINUTE)\" -DBUILDSECONDS=\"$(BUILDSECONDS)\"
 LDFLAGS = -z -xmsni -I$(IARPATH)/LIB -f ./build/iwatch-lnk430F5438A.xcl -f $(IARPATH)/config/linker/multiplier32.xcl -D_STACK_SIZE=900 -r $(IARPATH)/LIB/DLIB/dl430xllfn.r43 -D_DATA16_HEAP_SIZE=F10 -s __program_start -D_DATA20_HEAP_SIZE=E10 -D__iar_HWMUL=4C0
 
-LIBS = pedometer/sleepalgo.r43 pedometer/ti_pedometer.r43
+LIBS = pedometer/sleepalgo.r43
 
 ALL_DEFINES = RELEASE_VERSION AUTOSTART_ENABLE=1 HAVE_BLE=1 AMX_ANSIONLY=1 BYTE_ORDER=LITTLE_ENDIAN PAWN_CELL_SIZE=16 HAVE_ALLOCA_H=0 PRODUCT_W001=1 AMX_NATIVETABLE=window_natives
 ALL_INCLUDEDIRS = \
@@ -33,7 +33,8 @@ ALL_INCLUDEDIRS = \
 	platform/common/btstack \
 	platform/iwatch/btstack \
 	btstack/src \
-  btstack/chipset-cc256x \
+	btstack/ble \
+	btstack/chipset-cc256x \
 	btstack/include \
 
 #######################################
@@ -152,6 +153,7 @@ BTSTACK3 = \
   bluetooth.c \
   ble_file_handler.c \
   ble_handler.c \
+  ble_peripheral.c \
   sdp_client.c \
   spp.c \
   stlv.c \
@@ -161,9 +163,7 @@ BTSTACK3 = \
   stlv_transport.c \
   run_loop.c \
 
-BTSRCS = $(addprefix btstack/, $(BTSTACK1))
-
-BTSTACK = $(addprefix platform/iwatch/btstack/, $(BTSTACK0))  $(addprefix platform/common/btstack/, $(BTSTACK3))
+BTSTACK = $(addprefix platform/iwatch/btstack/, $(BTSTACK0)) $(addprefix btstack/, $(BTSTACK1)) $(addprefix platform/common/btstack/, $(BTSTACK3))
 
 AMX0 = amx.c amxwindow.c amxstring.c amxcons.c
 AMX = $(addprefix pawnscript/, $(AMX0))
@@ -210,17 +210,14 @@ WATCH = \
 
 SERVICES= \
   gesture/gesture.c \
-  pedometer/pedometer_dist.c
-#  pedometer/pedometer.c \
-#  pedometer/pedometer_msp430.c \
+  pedometer/pedometer_dist.c \
+  pedometer/pedometer.c \
+  pedometer/pedometer_msp430.c \
 
 OBJDIR = objs.msp430
 SRCS = $(CORE) $(WATCH) $(PLATFORM) $(ANT) $(BTSTACK) $(GRLIB) $(MPL) $(SERVICES) $(AMX) $(COMMON)
 OBJS0 = $(SRCS:.c=.o)
 OBJS = $(addprefix $(OBJDIR)/, $(OBJS0))
-
-BTOBJS0 = $(BTSRCS:.c=.o)
-BTOBJS = $(addprefix $(OBJDIR)/, $(BTOBJS0))
 
 ifeq ($(WINE), )
 DEPFILES = $(OBJS:.o=.d)
@@ -239,7 +236,7 @@ $(OBJDIR)/%.o: %.c
 
 all: buildnum $(OBJS) $(OBJDIR)/firmware.txt
 
-$(OBJDIR)/firmware.txt: ${OBJS} btstack.r43
+$(OBJDIR)/firmware.txt: ${OBJS}
 	@echo "Link $@"
 	$(WINE) ${LINK} $^ $(LIBS) ${LDFLAGS} -Omsp430_txt=$@ -l $(OBJDIR)/watch.map
 

@@ -1,3 +1,18 @@
+/****************************************************************
+*  Description: Implementation for Initialize for btstack
+*    History:
+*      Jun Su          2013/1/1        Created
+*      Jun Su          2013/1/13       Support BT and BLE
+*      Jun Su          2013/1/21       Make BT and BLE runs same time
+*
+* Copyright (c) Jun Su, 2013
+*
+* This unpublished material is proprietary to Jun Su.
+* All rights reserved. The methods and
+* techniques described herein are considered trade secrets
+* and/or confidential. Reproduction or distribution, in whole
+* or in part, is forbidden except by express written permission.
+****************************************************************/
 
 #include "contiki.h"
 #include "window.h"
@@ -28,7 +43,6 @@
 #include "system.h"
 
 extern void ble_init(void);
-extern void ble_start(void);
 extern void deviceid_init(void);
 extern void spp_init(void);
 extern void sdpc_open(const bd_addr_t remote_addr);
@@ -224,7 +238,6 @@ void bluetooth_shutdown()
 
 void bluetooth_start()
 {
-  ble_start();
   bluetooth_platform_init();
 
   process_start(&bluetooth_process, NULL);

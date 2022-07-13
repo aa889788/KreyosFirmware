@@ -27,6 +27,8 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * Please inquire about commercial licensing options at btstack@ringwald.ch
+ *
  */
 
 /*

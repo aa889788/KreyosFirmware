@@ -2,7 +2,7 @@
 #define _ATT_CLIENT_H_
 #include <btstack/btstack.h>
 #include <stdint.h>
-typedef uint16_t att_connection_t ;
+#include "att.h"
 
 typedef struct le_peripheral_event{
     uint8_t   type;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2012 by Matthias Ringwald
+ * Copyright (C) 2011-2012 BlueKitchen GmbH
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,79 +30,66 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * Please inquire about commercial licensing options at btstack@ringwald.ch
+ * Please inquire about commercial licensing options at contact@bluekitchen-gmbh.com
  *
  */
+#ifndef __ATT_SERVER_H
+#define __ATT_SERVER_H
 
-/**
- * interface to provide link key and remote name storage
- */
-
-#ifndef __REMOTE_DEVICE_DB_H
-#define __REMOTE_DEVICE_DB_H
-
-#include <btstack/utils.h>
-#include "gap.h"
+#include <btstack/btstack.h>
+#include <stdint.h>
+#include "att.h"
 
 #if defined __cplusplus
 extern "C" {
 #endif
 
-typedef struct {
+ /*
+  * @brief setup ATT server
+  * @param db attribute database created by compile-gatt.ph
+  * @param read_callback, see att.h, can be NULL
+  * @param write_callback, see attl.h, can be NULL
+  */
+void att_server_init(uint8_t const * db, att_read_callback_t read_callback, att_write_callback_t write_callback);
 
-    // management
-    void (*open)(void);
-    void (*close)(void);
-    
-    // link key
-    int  (*get_link_key)(bd_addr_t *bd_addr, link_key_t *link_key, link_key_type_t * type);
-    void (*put_link_key)(bd_addr_t *bd_addr, link_key_t *key, link_key_type_t type);
-    void (*delete_link_key)(bd_addr_t *bd_addr);
-    
-    // remote name
-    int  (*get_name)(bd_addr_t *bd_addr, device_name_t *device_name);
-    void (*put_name)(bd_addr_t *bd_addr, device_name_t *device_name);
-    void (*delete_name)(bd_addr_t *bd_addr);
+/*
+ * @brief register packet handler for general HCI Events like connect, diconnect, etc.
+ * @param handler
+ */
+void att_server_register_packet_handler(btstack_packet_handler_t handler);
 
-    // persistent rfcomm channel
-    uint8_t (*persistent_rfcomm_channel)(char *servicename);
+/*
+ * @brief tests if a notification or indication can be send right now
+ * @return 1, if packet can be sent
+ */
+int  att_server_can_send();
 
-} remote_device_db_t;
+/*
+ * @brief notify client about attribute value change
+ * @ereturns 0 if ok, error otherwise
+ */
+int att_server_notify(uint16_t handle, uint8_t *value, uint16_t value_len);
 
-extern       remote_device_db_t remote_device_db_iphone;
-extern const remote_device_db_t remote_device_db_memory;
+/*
+ * @brief indicate value change to client. client is supposed to reply with an indication_response
+ * @ereturns 0 if ok, error otherwise
+ */
+int att_server_indicate(uint16_t handle, uint8_t *value, uint16_t value_len);
 
-// MARK: non-persisten implementation
-#include <btstack/linked_list.h>
-#define MAX_NAME_LEN 32
-typedef struct {
-    // linked list - assert: first field
-    linked_item_t    item;
-    
-    bd_addr_t bd_addr;
-} db_mem_device_t;
+void att_server_query_service(const uint8_t *uuid128);
+void att_server_read_gatt_service(uint16_t start_handle, uint16_t end_handle);
+void att_server_send_gatt_services_request(uint16_t start_handle);
+void att_server_subscribe(uint16_t handle);
+void att_server_write(uint16_t handle, uint8_t *buffer, uint16_t length);
 
-typedef struct {
-    db_mem_device_t device;
-    link_key_t link_key;
-    link_key_type_t link_key_type;
-} db_mem_device_link_key_t;
+#define MODE_NORMAL 0
+#define MODE_SLEEP 1
+#define MODE_FAST 2
+void att_enter_mode(int mode);
 
-typedef struct {
-    db_mem_device_t device;
-    char device_name[MAX_NAME_LEN];
-} db_mem_device_name_t;
-
-typedef struct {
-    // linked list - assert: first field
-    linked_item_t    item;
-    
-    char service_name[MAX_NAME_LEN];
-    uint8_t channel;
-} db_mem_service_t;
 
 #if defined __cplusplus
 }
 #endif
 
-#endif // __REMOTE_DEVICE_DB_H
+#endif // __ATT_SERVER_H
